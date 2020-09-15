@@ -11,10 +11,8 @@ public:
     GUI(QWidget* parent = Q_NULLPTR);
     QString m_dbPath;
     QSqlTableModel* m_pTableModelSchedule;
-    QStringList getLabs();
-    QStringList getMachines(QString Lab);
+    QSqlTableModel* m_pTableModelWorkOrders;
     QStringList getMachineInfo(QString Lab, QString Machine);
-    void fillComboBox(QComboBox* pBox, QStringList elments, bool bAddEmptyElement = true);
     void setInfo(const QStringList& info);
 
 private:
@@ -26,5 +24,6 @@ public slots:
     void on_toolButton_Remove_pressed();
     void on_toolButton_Home_pressed();
     void on_actionEdit_Info_triggered();
+    void on_toolButton_MR_pressed();
     //void on_toolButton_ChooseImage_pressed();
 };

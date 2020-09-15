@@ -24,13 +24,13 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="page_3">
-       <layout class="QGridLayout" name="gridLayout_5">
-        <item row="0" column="0">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
+        <item>
          <widget class="QSplitter" name="splitter">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-          <widget class="QWidget" name="">
+          <widget class="QWidget" name="layoutWidget">
            <layout class="QGridLayout" name="gridLayout">
             <item row="0" column="0">
              <widget class="QFrame" name="frame">
@@ -368,28 +368,47 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="">
-           <layout class="QGridLayout" name="gridLayout_2">
-            <item row="0" column="0" colspan="2">
-             <widget class="QTableView" name="tableView"/>
-            </item>
-            <item row="1" column="0">
-             <widget class="QToolButton" name="toolButton_2">
-              <property name="text">
-               <string>New Maintenance Request</string>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="QToolButton" name="toolButton_3">
+          <widget class="QTableView" name="tableView">
+           <property name="editTriggers">
+            <set>QAbstractItemView::NoEditTriggers</set>
+           </property>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <spacer name="horizontalSpacer">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_8">
+            <item>
+             <widget class="QPushButton" name="toolButton_MW">
               <property name="text">
                <string>New Maitenance Work</string>
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="QPushButton" name="toolButton_MR">
+              <property name="text">
+               <string>New Maintenance Request</string>
+              </property>
+             </widget>
+            </item>
            </layout>
-          </widget>
-         </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>

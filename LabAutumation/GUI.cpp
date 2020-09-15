@@ -15,6 +15,8 @@
 #include <QItemSelectionModel>
 #include <QInputDialog>
 #include <QAbstractItemModel>
+#include "MaintenanceRequestForm.h"
+#include"DBUtils.h"
 static void UpdateComboBoxWithCompleter(QComboBox* b, QStringList l, QWidget* parent)
 {
     const QString Current_Text = b->currentText();
@@ -53,7 +55,21 @@ GUI::GUI(QWidget* parent)
     : QMainWindow(parent)
 {
     ui.setupUi(this);
-    m_dbPath = "D:\\";
+    m_dbPath = "D:\\Atef\\Codes Snippites";
+
+    if (!CreateSQLiteDatabase(m_dbPath))
+    {
+        QMessageBox::critical(this, "Fatal Error", "Could not load Data");
+        this->close();
+    }
+    QSqlDatabase db;
+    if (!QSqlDatabase::contains("LabAutomation"))
+    {
+        db = QSqlDatabase::addDatabase("QSQLITE", "cs");
+        db.setDatabaseName(m_dbPath + "/LabAutomation.db");
+    }
+    else
+        db = QSqlDatabase::database("LabAutomation");
     QDir appDir(m_dbPath);
     appDir.mkpath(m_dbPath);
 
@@ -64,26 +80,24 @@ GUI::GUI(QWidget* parent)
         QMessageBox::critical(this, "Fatal Error", "Could not load Data");
         this->close();
     }*/
-    QSqlDatabase db;
-    if (!QSqlDatabase::contains("LA"))
-    {
-        db = QSqlDatabase::addDatabase("QSQLITE", "LA");
-        db.setDatabaseName(m_dbPath + "/LA.db");
-    }
-    else
-        db = QSqlDatabase::database("LA");
-    m_pTableModelSchedule = new QSqlTableModel(this, QSqlDatabase::database("LA"));
+  
+    m_pTableModelSchedule = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
+    m_pTableModelWorkOrders = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
     QString as = m_pTableModelSchedule->lastError().text();
 
     m_pTableModelSchedule->setTable("Machines");
-    as = m_pTableModelSchedule->lastError().text();
+    m_pTableModelWorkOrders->setTable("WorkOrders");
+    m_pTableModelWorkOrders->setFilter("\"Request State\" = 'To Do'");
+    m_pTableModelWorkOrders->select();
     m_pTableModelSchedule->select();
-    ui.tableView_machines->setModel(m_pTableModelSchedule);
+
+    ui.tableView->setModel(m_pTableModelWorkOrders);
     ui.tableView_machines->setModel(m_pTableModelSchedule);
     ui.tableView_machines->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui.tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_pTableModelSchedule->insertRow(m_pTableModelSchedule->rowCount(QModelIndex()));
 
-    fillComboBox(ui.comboBox_labs, getLabs());
+    fillComboBox(ui.comboBox_labs, getLabs(m_dbPath),true);
     setInfo({});
 }
 
@@ -109,7 +123,7 @@ void GUI::on_comboBox_labs_currentTextChanged(QString txt)
 
         return;
     }
-    fillComboBox(ui.comboBox_Machines, getMachines(ui.comboBox_labs->currentText()));
+    fillComboBox(ui.comboBox_Machines, getMachines(ui.comboBox_labs->currentText(),m_dbPath),true);
 
 }
 void GUI::on_comboBox_Machines_currentTextChanged(QString txt)
@@ -139,55 +153,7 @@ void GUI::on_toolButton_Remove_pressed()
 
 }
 
-QStringList GUI::getLabs()
-{
-    QStringList Labs;
-    QSqlDatabase db;
-    if (!QSqlDatabase::contains("LA"))
-    {
-        db = QSqlDatabase::addDatabase("QSQLITE", "LA");
-        db.setDatabaseName(m_dbPath + "/LA.db");
-    }
-    else
-        db = QSqlDatabase::database("LA");
 
-    QSqlQuery query(QSqlDatabase::database("LA"));
-
-    QString err = query.lastError().text();
-    query.prepare("SELECT DISTINCT \"Lab Name\" FROM Machines; ");
-    query.exec();
-    err = query.lastError().text();
-
-
-    while (query.next())
-        Labs.push_back(query.value(0).toString());
-    return Labs;
-}
-
-QStringList GUI::getMachines(QString Lab)
-{
-    QStringList Machines;
-    QSqlDatabase db;
-    if (!QSqlDatabase::contains("LA"))
-    {
-        db = QSqlDatabase::addDatabase("QSQLITE", "LA");
-        db.setDatabaseName(m_dbPath + "/LA.db");
-    }
-    else
-        db = QSqlDatabase::database("LA");
-
-    QSqlQuery query(QSqlDatabase::database("LA"));
-
-    QString err = query.lastError().text();
-    query.prepare("SELECT DISTINCT Machines.\"Machine Model\" FROM Machines where \"Lab Name\" = :LN; ");
-    query.bindValue(":LN", Lab);
-    query.exec();
-    err = query.lastError().text();
-
-    while (query.next())
-        Machines.push_back(query.value(0).toString());
-    return Machines;
-}
 
 QStringList GUI::getMachineInfo(QString Lab, QString Machine)
 {
@@ -196,13 +162,13 @@ QStringList GUI::getMachineInfo(QString Lab, QString Machine)
     QSqlDatabase db;
     if (!QSqlDatabase::contains("LA"))
     {
-        db = QSqlDatabase::addDatabase("QSQLITE", "LA");
-        db.setDatabaseName(m_dbPath + "/LA.db");
+        db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
+        db.setDatabaseName(m_dbPath + "/LabAutomation.db");
     }
     else
-        db = QSqlDatabase::database("LA");
+        db = QSqlDatabase::database("LabAutomation");
 
-    QSqlQuery query(QSqlDatabase::database("LA"));
+    QSqlQuery query(QSqlDatabase::database("LabAutomation"));
 
     QString err = query.lastError().text();
     query.prepare("SELECT * FROM Machines where \"Lab Name\" = :LN ANd \"Machine Model\" = :MM;");
@@ -227,13 +193,6 @@ QStringList GUI::getMachineInfo(QString Lab, QString Machine)
     return MachineInfo;
 }
 
-void GUI::fillComboBox(QComboBox* pBox, QStringList elments, bool bAddEmptyElement)
-{
-    pBox->clear();
-    if (bAddEmptyElement)
-        pBox->addItem("");
-    pBox->addItems(elments);
-}
 void GUI::setInfo(const QStringList& info)
 {
     if (info.isEmpty())
@@ -291,5 +250,12 @@ void GUI::on_actionEdit_Info_triggered()
     if (pass != "guc123")
         return;
     ui.stackedWidget->setCurrentIndex(1);
+}
+
+void GUI::on_toolButton_MR_pressed()
+{
+    MaintenanceRequestForm form(m_dbPath, this);
+    form.exec();
+    //m_pTableModelWorkOrders->select();
 }
 
