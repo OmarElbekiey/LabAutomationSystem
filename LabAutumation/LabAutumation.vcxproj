@@ -103,9 +103,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CWF.cpp" />
+    <ClCompile Include="CWFID.cpp" />
     <ClCompile Include="MaintenanceRequestForm.cpp" />
     <QtRcc Include="darkstyle.qrc" />
     <QtRcc Include="GUI.qrc" />
+    <QtUic Include="CWF.ui" />
+    <QtUic Include="CWFID.ui" />
     <QtUic Include="GUI.ui" />
     <QtMoc Include="GUI.h" />
     <ClCompile Include="DarkStyle.cpp" />
@@ -120,6 +124,8 @@
     <QtMoc Include="MaintenanceRequestForm.h" />
   </ItemGroup>
   <ItemGroup>
+    <QtMoc Include="CWF.h" />
+    <QtMoc Include="CWFID.h" />
     <ClInclude Include="DBUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

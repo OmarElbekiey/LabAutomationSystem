@@ -25,5 +25,7 @@ public slots:
     void on_toolButton_Home_pressed();
     void on_actionEdit_Info_triggered();
     void on_toolButton_MR_pressed();
+    void on_toolButton_MW_pressed();
+    void on_tableView_doubleClicked(const QModelIndex& index);
     //void on_toolButton_ChooseImage_pressed();
 };

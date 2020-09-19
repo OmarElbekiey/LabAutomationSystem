@@ -32,13 +32,13 @@ void MaintenanceRequestForm::accept()
         return;
     }
     QSqlDatabase db;
-    //if (!QSqlDatabase::contains("LabAutomation"))
-    //{
-    //    db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
-    //    db.setDatabaseName(m_dbPath + "/LabAutomation.db");
-    //}
-    //else
-    //    db = QSqlDatabase::database("LabAutomation");
+    if (!QSqlDatabase::contains("LabAutomation"))
+    {
+        db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
+        db.setDatabaseName(m_dbPath + "/LabAutomation.db");
+    }
+    else
+        db = QSqlDatabase::database("LabAutomation");
     QSqlQuery query(QSqlDatabase::database("LabAutomation"));
     QString err = query.lastError().text();
     query.prepare("INSERT INTO WorkOrders (\"Lab Name\", \"Machine Model\", Cause, \"Request Owner\", \"Request Owner Email\",\"Requested Work Description\", \"Request Time\",\"Request State\")"

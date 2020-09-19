@@ -1,40 +1,23 @@
-/*
-###############################################################################
-#                                                                             #
-# The MIT License                                                             #
-#                                                                             #
-# Copyright (C) 2017 by Juergen Skrotzky (JorgenVikingGod@gmail.com)          #
-#               >> https://github.com/Jorgen-VikingGod                        #
-#                                                                             #
-# Sources: https://github.com/Jorgen-VikingGod/Qt-Frameless-Window-DarkStyle  #
-#                                                                             #
-###############################################################################
-*/
-
-#ifndef _DarkStyle_HPP
-#define _DarkStyle_HPP
-
+#pragma once
+#pragma warning(push, 0)
 #include <QApplication>
+#include <QFile>
+#include <QFont>
 #include <QProxyStyle>
 #include <QStyleFactory>
-#include <QFont>
-#include <QFile>
+#pragma warning(pop)
+
 
 class DarkStyle : public QProxyStyle
 {
-  Q_OBJECT
+	Q_OBJECT
 
 public:
-  DarkStyle();
-  explicit DarkStyle(QStyle *style);
-
-  QStyle *baseStyle() const;
-
-  void polish(QPalette &palette) override;
-  void polish(QApplication *app) override;
+	DarkStyle();
+	explicit DarkStyle(QStyle* style);
+	void polish(QApplication* app) override;
+	QPalette standardPalette() const override;
 
 private:
-  QStyle *styleBase(QStyle *style = Q_NULLPTR) const;
+	QStyle* styleBase(QStyle* style = Q_NULLPTR) const;
 };
-
-#endif  // _DarkStyle_HPP

@@ -16,7 +16,9 @@
 #include <QInputDialog>
 #include <QAbstractItemModel>
 #include "MaintenanceRequestForm.h"
-#include"DBUtils.h"
+#include "DBUtils.h"
+#include "CWF.h"
+#include "CWFID.h"
 static void UpdateComboBoxWithCompleter(QComboBox* b, QStringList l, QWidget* parent)
 {
     const QString Current_Text = b->currentText();
@@ -72,7 +74,6 @@ GUI::GUI(QWidget* parent)
         db = QSqlDatabase::database("LabAutomation");
     QDir appDir(m_dbPath);
     appDir.mkpath(m_dbPath);
-
     //initGUI();
 
    /* if (!CreateSQLiteDatabase(m_dbPath))
@@ -80,24 +81,23 @@ GUI::GUI(QWidget* parent)
         QMessageBox::critical(this, "Fatal Error", "Could not load Data");
         this->close();
     }*/
-  
-    m_pTableModelSchedule = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
-    m_pTableModelWorkOrders = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
-    QString as = m_pTableModelSchedule->lastError().text();
 
+    m_pTableModelSchedule = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
+    QString as = m_pTableModelSchedule->lastError().text();
     m_pTableModelSchedule->setTable("Machines");
+    m_pTableModelSchedule->select();
+    ui.tableView_machines->setModel(m_pTableModelSchedule);
+    ui.tableView_machines->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    m_pTableModelWorkOrders = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
     m_pTableModelWorkOrders->setTable("WorkOrders");
     m_pTableModelWorkOrders->setFilter("\"Request State\" = 'To Do'");
     m_pTableModelWorkOrders->select();
-    m_pTableModelSchedule->select();
-
     ui.tableView->setModel(m_pTableModelWorkOrders);
-    ui.tableView_machines->setModel(m_pTableModelSchedule);
-    ui.tableView_machines->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui.tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_pTableModelSchedule->insertRow(m_pTableModelSchedule->rowCount(QModelIndex()));
 
-    fillComboBox(ui.comboBox_labs, getLabs(m_dbPath),true);
+    fillComboBox(ui.comboBox_labs, getLabs(m_dbPath), true);
     setInfo({});
 }
 
@@ -123,7 +123,7 @@ void GUI::on_comboBox_labs_currentTextChanged(QString txt)
 
         return;
     }
-    fillComboBox(ui.comboBox_Machines, getMachines(ui.comboBox_labs->currentText(),m_dbPath),true);
+    fillComboBox(ui.comboBox_Machines, getMachines(ui.comboBox_labs->currentText(), m_dbPath), true);
 
 }
 void GUI::on_comboBox_Machines_currentTextChanged(QString txt)
@@ -244,6 +244,7 @@ void GUI::on_toolButton_Home_pressed()
     ui.stackedWidget->setCurrentIndex(0);
 
 }
+
 void GUI::on_actionEdit_Info_triggered()
 {
     QString pass = QInputDialog::getText(this, "Password", "Enter Password", QLineEdit::Password);
@@ -256,6 +257,28 @@ void GUI::on_toolButton_MR_pressed()
 {
     MaintenanceRequestForm form(m_dbPath, this);
     form.exec();
-    //m_pTableModelWorkOrders->select();
+    m_pTableModelWorkOrders = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
+    m_pTableModelWorkOrders->setTable("WorkOrders");
+    m_pTableModelWorkOrders->setFilter("\"Request State\" = 'To Do'");
+    ui.tableView->setModel(m_pTableModelWorkOrders);
+    m_pTableModelWorkOrders->select();
 }
 
+void GUI::on_toolButton_MW_pressed()
+{
+    CWF form(m_dbPath, this);
+    form.exec();
+
+}
+
+void GUI::on_tableView_doubleClicked(const QModelIndex& index)
+{
+    int ID = ui.tableView->model()->data(ui.tableView->model()->index(index.row(), 0)).toInt();
+    if (ID <= 0)
+    {
+        QMessageBox::warning(this, "Lab Automation", "Invalid Request");
+        return;
+    }
+    CWFID form(ID, ui.tableView->model()->data(ui.tableView->model()->index(index.row(), 1)).toString(), ui.tableView->model()->data(ui.tableView->model()->index(index.row(), 2)).toString(), m_dbPath, this);
+    form.exec();
+}

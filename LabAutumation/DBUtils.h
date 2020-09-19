@@ -40,6 +40,7 @@ static bool CreateSQLiteDatabase(QString dbPath)
         QSqlQuery query;
         bool ok = query.exec(
             "CREATE TABLE WorkOrders("
+            " ID         INTEGER PRIMARY KEY AUTOINCREMENT,"
             "[Lab Name]                   VARCHAR NOT NULL, "
             "[Machine Model]              VARCHAR NOT NULL, "
             "Cause                        VARCHAR,          "
@@ -88,7 +89,7 @@ static QStringList getLabs(QString dbPath)
 {
     QStringList Labs;
     QSqlDatabase db;
-    if (!QSqlDatabase::contains("LA"))
+    if (!QSqlDatabase::contains("LabAutomation"))
     {
         db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
         db.setDatabaseName(dbPath + "/LabAutomation.db");
@@ -113,9 +114,9 @@ static QStringList getMachines(QString Lab, QString dbPath)
 {
     QStringList Machines;
     QSqlDatabase db;
-    if (!QSqlDatabase::contains("LA"))
+    if (!QSqlDatabase::contains("LabAutomation"))
     {
-        db = QSqlDatabase::addDatabase("QSQLITE", "LA");
+        db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
         db.setDatabaseName(dbPath + "/LabAutomation.db");
     }
     else
@@ -134,6 +135,93 @@ static QStringList getMachines(QString Lab, QString dbPath)
     return Machines;
 }
 
+/* *Request completer
+   *Request Compeleter Email
+   *Completed Work Description
+   *Cost Of Labor
+   *Cost Of Material
+*/
+static void CompleteWork(int ID, QStringList completionItems, QString dbPath)
+{
+    QSqlDatabase db;
+    if (!QSqlDatabase::contains("LabAutomation"))
+    {
+        db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
+        db.setDatabaseName(dbPath + "/LabAutomation.db");
+    }
+    else
+        db = QSqlDatabase::database("LabAutomation");
+
+    QSqlQuery query(QSqlDatabase::database("LabAutomation"));
+
+
+    query.prepare("UPDATE WorkOrders"
+        " SET \"Request State\" = :RS,"
+        "\"Request Compeleter\" = :RC,"
+        "\"Compeletion Time\" = :CT,"
+        "\"Request Compeleter Email\" = :RCE,"
+        "\"Completed Work Description\" = :CWD,"
+        "\"Cost Of Labor\" = :COL,"
+        "\"Cost Of Material\" = :COM"
+        " WHERE "
+        "ID = :rid;");
+    QString err = query.lastError().text();
+    query.bindValue(":RS", "Done");
+    query.bindValue(":RC", completionItems[0]);
+    query.bindValue(":CT", QDateTime::currentDateTime().toString());
+    query.bindValue(":RCE", completionItems[1]);
+    query.bindValue(":CWD", completionItems[2]);
+    query.bindValue(":COL", completionItems[3]);
+    query.bindValue(":COM", completionItems[4]);
+    query.bindValue(":rid", ID);
+    query.exec();
+}
+
+static void createCompleteWork(QStringList completionItems, QString dbPath)
+{
+    if (!openDB(dbPath))
+    {
+        return;
+    }
+    QSqlDatabase db;
+    if (!QSqlDatabase::contains("LabAutomation"))
+    {
+        db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
+        db.setDatabaseName(dbPath + "/LabAutomation.db");
+    }
+    else
+        db = QSqlDatabase::database("LabAutomation");
+    QSqlQuery query(QSqlDatabase::database("LabAutomation"));
+    QString err = query.lastError().text();
+    query.prepare("INSERT INTO WorkOrders (\"Lab Name\", \"Machine Model\", Cause, \"Request Owner\", \"Request Owner Email\",\"Requested Work Description\", \"Request Time\",\"Request State\","
+        "\"Request Compeleter\","
+        "\"Compeletion Time\","
+        "\"Request Compeleter Email\","
+        "\"Completed Work Description\","
+        "\"Cost Of Labor\","
+        "\"Cost Of Material\""
+        ")"
+        "VALUES (:LN, :MM, :C, :RO, :ROE, :ROD, :RT, :RS, :RC, :CT,:RCE,:CWD,:COL,:COM)");
+    err = query.lastError().text();
+    // Bind Patient info Values
+    query.bindValue(":LN", completionItems[0]);
+    query.bindValue(":MM", completionItems[1]);
+    query.bindValue(":C", completionItems[2]);
+    query.bindValue(":RO", completionItems[3]);
+    query.bindValue(":ROE", completionItems[4]);
+    query.bindValue(":ROD", completionItems[5]);
+    query.bindValue(":RT", QDateTime::currentDateTime().toString());
+    query.bindValue(":RS", "Done");
+    query.bindValue(":RC", completionItems[6]);
+    query.bindValue(":CT", QDateTime::currentDateTime().toString());
+    query.bindValue(":RCE", completionItems[7]);
+    query.bindValue(":CWD", completionItems[8]);
+    query.bindValue(":COL", completionItems[9]);
+    query.bindValue(":COM", completionItems[10]);
+    bool success = query.exec();
+    
+    QString sss = query.executedQuery();
+}
 static void fillComboBox(QComboBox* pBox, QStringList elments, bool bAddEmptyElement)
 {
     pBox->clear();
