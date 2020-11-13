@@ -47,21 +47,12 @@
                <enum>QFrame::Raised</enum>
               </property>
               <layout class="QVBoxLayout" name="verticalLayout_5">
-               <property name="rightMargin">
-                <number>9</number>
-               </property>
                <item>
-                <spacer name="verticalSpacer_2">
-                 <property name="orientation">
-                  <enum>Qt::Vertical</enum>
+                <widget class="QLabel" name="Logo">
+                 <property name="text">
+                  <string/>
                  </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>17</width>
-                   <height>121</height>
-                  </size>
-                 </property>
-                </spacer>
+                </widget>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout">

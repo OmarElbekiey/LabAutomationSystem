@@ -74,7 +74,9 @@ GUI::GUI(QWidget* parent)
     }
     else
         db = QSqlDatabase::database("LabAutomation");
-
+    QPixmap logo(":/GUI/Resources/Logo.jpg");
+    ui.Logo->setPixmap(logo.scaled(276, 200, Qt::KeepAspectRatio));
+    ui.Logo->setScaledContents(true);
     //initGUI();
 
    /* if (!CreateSQLiteDatabase(m_dbPath))
