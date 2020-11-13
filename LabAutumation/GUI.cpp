@@ -19,6 +19,7 @@
 #include "DBUtils.h"
 #include "CWF.h"
 #include "CWFID.h"
+#include <QSettings>
 static void UpdateComboBoxWithCompleter(QComboBox* b, QStringList l, QWidget* parent)
 {
     const QString Current_Text = b->currentText();
@@ -31,7 +32,6 @@ static void UpdateComboBoxWithCompleter(QComboBox* b, QStringList l, QWidget* pa
     QCompleter* c = new QCompleter(l, parent);
     c->setCaseSensitivity(Qt::CaseInsensitive);
     b->setCompleter(c);
-
 }
 static void renderQImage(QGraphicsView* pViewer, QImage* pImage)
 {
@@ -57,7 +57,9 @@ GUI::GUI(QWidget* parent)
     : QMainWindow(parent)
 {
     ui.setupUi(this);
-    m_dbPath = "D:\\Atef\\Codes Snippites";
+    m_dbPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir appDir(m_dbPath);
+    appDir.mkpath(m_dbPath);
 
     if (!CreateSQLiteDatabase(m_dbPath))
     {
@@ -67,13 +69,12 @@ GUI::GUI(QWidget* parent)
     QSqlDatabase db;
     if (!QSqlDatabase::contains("LabAutomation"))
     {
-        db = QSqlDatabase::addDatabase("QSQLITE", "cs");
+        db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
         db.setDatabaseName(m_dbPath + "/LabAutomation.db");
     }
     else
         db = QSqlDatabase::database("LabAutomation");
-    QDir appDir(m_dbPath);
-    appDir.mkpath(m_dbPath);
+
     //initGUI();
 
    /* if (!CreateSQLiteDatabase(m_dbPath))
@@ -82,23 +83,41 @@ GUI::GUI(QWidget* parent)
         this->close();
     }*/
 
+    InitializeTables();
+}
+void GUI::InitializeTables()
+{
     m_pTableModelSchedule = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
     QString as = m_pTableModelSchedule->lastError().text();
     m_pTableModelSchedule->setTable("Machines");
     m_pTableModelSchedule->select();
     ui.tableView_machines->setModel(m_pTableModelSchedule);
-    ui.tableView_machines->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    // ui.tableView_machines->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     m_pTableModelWorkOrders = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
     m_pTableModelWorkOrders->setTable("WorkOrders");
     m_pTableModelWorkOrders->setFilter("\"Request State\" = 'To Do'");
     m_pTableModelWorkOrders->select();
     ui.tableView->setModel(m_pTableModelWorkOrders);
-    ui.tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    m_pTableModelSchedule->insertRow(m_pTableModelSchedule->rowCount(QModelIndex()));
+    //  ui.tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 
     fillComboBox(ui.comboBox_labs, getLabs(m_dbPath), true);
     setInfo({});
+
+    m_pTableModelWorkOrders->removeColumn(9);
+    m_pTableModelWorkOrders->removeColumn(9);
+    m_pTableModelWorkOrders->removeColumn(9);
+    m_pTableModelWorkOrders->removeColumn(9);
+    m_pTableModelWorkOrders->removeColumn(9);
+    m_pTableModelWorkOrders->removeColumn(9);
+
+
+    m_pCompleteTableModelWorkOrders = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
+    m_pCompleteTableModelWorkOrders->setTable("WorkOrders");
+    m_pCompleteTableModelWorkOrders->select();
+    ui.tableView_machines_WorkOrders->setModel(m_pCompleteTableModelWorkOrders);
+    ui.tableView_machines_WorkOrders->setVisible(false);
+
 }
 
 void GUI::on_toolButton_new_pressed()
@@ -115,6 +134,19 @@ void GUI::on_toolButton_new_pressed()
     QString as = m_pTableModelSchedule->lastError().text();
 
 }
+
+void GUI::on_toolButton_Submit_pressed()
+{
+    ui.tableView_machines->setDisabled(true);
+    ui.tableView_machines->setDisabled(false);
+    if (!m_pTableModelSchedule->submit())
+    {
+        QString as = m_pTableModelSchedule->lastError().text();
+        QMessageBox::critical(this, "Error", "Please, Insert a Unique Lab Name and Machine model.");
+        return;
+    }
+}
+
 void GUI::on_comboBox_labs_currentTextChanged(QString txt)
 {
     if (txt.isEmpty())
@@ -141,8 +173,8 @@ void GUI::on_toolButton_Remove_pressed()
     ui.tableView_machines->setDisabled(false);
     QItemSelectionModel* select = ui.tableView_machines->selectionModel();
 
-    QModelIndexList selected = select->selectedRows(); // return selected row(s)
-    if (!select->selectedRows().isEmpty())
+    QModelIndexList selected = select->selectedIndexes(); // return selected row(s)
+    if (!selected.isEmpty())
     {
         int r = selected[0].row();
         m_pTableModelSchedule->removeRows(r, 1);
@@ -150,6 +182,7 @@ void GUI::on_toolButton_Remove_pressed()
         m_pTableModelSchedule->select();
         er = m_pTableModelSchedule->lastError().text();
     }
+    m_pTableModelSchedule->removeRow(m_pTableModelSchedule->rowCount(QModelIndex()));
 
 }
 
@@ -236,20 +269,48 @@ void GUI::setInfo(const QStringList& info)
 //    QModelIndex row = select->selectedRows()[0];
 //    QModelIndex id = m_pTableModelSchedule->index(row.row(), 8, QModelIndex());
 //    ui.tableView_machines->edit(id);
-//    m_pTableModelSchedule->setData(id, QVariant(inputFilename));
+//    m_pTableModelSchedule->setData(id, QVariant(inputFilename));  
 //    m_pTableModelSchedule->select();
 //}
 void GUI::on_toolButton_Home_pressed()
 {
     ui.stackedWidget->setCurrentIndex(0);
+    fillComboBox(ui.comboBox_labs, getLabs(m_dbPath), true);
+    setInfo({});
 
+}
+
+void GUI::on_actionChange_Password_triggered()
+{
+    QString pass = QInputDialog::getText(this, "Password", "Enter Password", QLineEdit::PasswordEchoOnEdit);
+    QSettings mySettings("Settings.ini", QSettings::IniFormat);
+    QString currPass = mySettings.value("Password").toString();
+    if (pass != currPass)
+    {
+        QMessageBox::critical(this, "Error", "Invalid Password");
+        return;
+    }
+    bool ok;
+    QString text = QInputDialog::getText(NULL, QObject::tr("Please Set The Admin Password"),
+        QObject::tr("Password:"), QLineEdit::EchoMode::PasswordEchoOnEdit,
+        "", &ok);
+    if (ok)
+    {
+        mySettings.setValue("Password", text);
+    }
 }
 
 void GUI::on_actionEdit_Info_triggered()
 {
     QString pass = QInputDialog::getText(this, "Password", "Enter Password", QLineEdit::Password);
-    if (pass != "guc123")
+    QSettings mySettings("Settings.ini", QSettings::IniFormat);
+    QString settingPass = mySettings.value("Password").toString();
+    if (pass != settingPass)
+    {
+        QMessageBox::critical(this, "Error", "Invalid Password");
         return;
+    }
+
     ui.stackedWidget->setCurrentIndex(1);
 }
 
@@ -267,8 +328,10 @@ void GUI::on_toolButton_MR_pressed()
 void GUI::on_toolButton_MW_pressed()
 {
     CWF form(m_dbPath, this);
-    form.exec();
-
+    if (form.exec())
+    {
+        QMessageBox::information(this, "Success", "Work Saved Successfully.");
+    }
 }
 
 void GUI::on_tableView_doubleClicked(const QModelIndex& index)
@@ -281,4 +344,16 @@ void GUI::on_tableView_doubleClicked(const QModelIndex& index)
     }
     CWFID form(ID, ui.tableView->model()->data(ui.tableView->model()->index(index.row(), 1)).toString(), ui.tableView->model()->data(ui.tableView->model()->index(index.row(), 2)).toString(), m_dbPath, this);
     form.exec();
+}
+
+void GUI::on_radioButton_Machines_toggled(bool b)
+{
+    ui.tableView_machines->setVisible(b);
+    ui.tableView_machines_WorkOrders->setHidden(b);
+}
+
+void GUI::on_radioButton_WorkOrders_toggled(bool b)
+{
+    ui.tableView_machines_WorkOrders->setVisible(b);
+    ui.tableView_machines->setHidden(b);
 }

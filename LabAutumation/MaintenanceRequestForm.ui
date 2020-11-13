@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>373</width>
-    <height>263</height>
+    <height>278</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -169,8 +169,8 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>230</x>
-     <y>232</y>
+     <x>353</x>
+     <y>258</y>
     </hint>
     <hint type="destinationlabel">
      <x>46</x>
