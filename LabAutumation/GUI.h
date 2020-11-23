@@ -33,5 +33,6 @@ public slots:
     void on_tableView_doubleClicked(const QModelIndex& index);
     void on_radioButton_Machines_toggled(bool b);
     void on_radioButton_WorkOrders_toggled(bool b);
+    void on_actionLoad_Data_triggered();
     //void on_toolButton_ChooseImage_pressed();
 };

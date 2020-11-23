@@ -319,12 +319,18 @@ void GUI::on_actionEdit_Info_triggered()
 void GUI::on_toolButton_MR_pressed()
 {
     MaintenanceRequestForm form(m_dbPath, this);
-    form.exec();
-    m_pTableModelWorkOrders = new QSqlTableModel(this, QSqlDatabase::database("LabAutomation"));
-    m_pTableModelWorkOrders->setTable("WorkOrders");
-    m_pTableModelWorkOrders->setFilter("\"Request State\" = 'To Do'");
-    ui.tableView->setModel(m_pTableModelWorkOrders);
-    m_pTableModelWorkOrders->select();
+    if (form.exec())
+    {
+        m_pTableModelWorkOrders->setFilter("\"Request State\" = 'To Do'");
+        ui.tableView->setModel(m_pTableModelWorkOrders);
+        m_pTableModelWorkOrders->select();
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+    }
 }
 
 void GUI::on_toolButton_MW_pressed()
@@ -334,6 +340,7 @@ void GUI::on_toolButton_MW_pressed()
     {
         QMessageBox::information(this, "Success", "Work Saved Successfully.");
     }
+
 }
 
 void GUI::on_tableView_doubleClicked(const QModelIndex& index)
@@ -345,7 +352,18 @@ void GUI::on_tableView_doubleClicked(const QModelIndex& index)
         return;
     }
     CWFID form(ID, ui.tableView->model()->data(ui.tableView->model()->index(index.row(), 1)).toString(), ui.tableView->model()->data(ui.tableView->model()->index(index.row(), 2)).toString(), m_dbPath, this);
-    form.exec();
+    if (form.exec())
+    {
+        m_pTableModelWorkOrders->setFilter("\"Request State\" = 'To Do'");
+        ui.tableView->setModel(m_pTableModelWorkOrders);
+        m_pTableModelWorkOrders->select();
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+        m_pTableModelWorkOrders->removeColumn(9);
+    }
 }
 
 void GUI::on_radioButton_Machines_toggled(bool b)
@@ -358,4 +376,37 @@ void GUI::on_radioButton_WorkOrders_toggled(bool b)
 {
     ui.tableView_machines_WorkOrders->setVisible(b);
     ui.tableView_machines->setHidden(b);
+}
+
+void GUI::on_actionLoad_Data_triggered()
+{
+    QSettings mySettings("Settings.ini", QSettings::IniFormat);
+    QString lastPath = mySettings.value("Last Loaded Data Path").toString();
+    QString inputFilename = QFileDialog::getOpenFileName(this, tr("select file"), lastPath, "*.db");
+    if (inputFilename == NULL)
+        return;
+    mySettings.setValue("Last Loaded Data Path", inputFilename);
+    QFile file(inputFilename);
+    if (!file.exists())
+        return;
+    int reply = QMessageBox::question(this, "Change Data", " Old data will be deleted, Are you sure you want to change the data?", QMessageBox::Yes | QMessageBox::No);
+    if (reply == QMessageBox::No)
+        return;
+    if (QSqlDatabase::contains("LabAutomation"))
+    {
+        QSqlDatabase::database("LabAutomation").close();
+        QSqlDatabase::removeDatabase("LabAutomation");
+    }
+    QFile oldfile(m_dbPath + "/LabAutomation.db");
+    oldfile.remove();
+    file.copy(m_dbPath + "/LabAutomation.db");
+    QSqlDatabase db;
+    if (!QSqlDatabase::contains("LabAutomation"))
+    {
+        db = QSqlDatabase::addDatabase("QSQLITE", "LabAutomation");
+        db.setDatabaseName(m_dbPath + "/LabAutomation.db");
+    }
+    else
+        db = QSqlDatabase::database("LabAutomation");
+    InitializeTables();
 }
