@@ -10,6 +10,8 @@ int main(int argc, char* argv[])
 
     GUI w;
     a.setStyle(new DarkStyle);
+    QIcon i("logo.ico");
+    a.setWindowIcon(i);
     w.show();
     return a.exec();
 }
