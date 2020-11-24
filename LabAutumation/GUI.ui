@@ -14,7 +14,7 @@
    <string>Asset Management System</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="GUI.qrc">
+   <iconset>
     <normaloff>:/GUI/Resources/logo.ico</normaloff>:/GUI/Resources/logo.ico</iconset>
   </property>
   <property name="styleSheet">
@@ -303,7 +303,7 @@
                   <item>
                    <widget class="QLabel" name="label_3">
                     <property name="text">
-                     <string>Time Interva:</string>
+                     <string>Time Interval:</string>
                     </property>
                    </widget>
                   </item>
@@ -624,7 +624,7 @@
   </action>
   <action name="actionLoad_Data">
    <property name="icon">
-    <iconset resource="GUI.qrc">
+    <iconset>
      <normaloff>:/GUI/Resources/Logo1.jpg</normaloff>:/GUI/Resources/Logo1.jpg</iconset>
    </property>
    <property name="text">
