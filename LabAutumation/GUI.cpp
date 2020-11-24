@@ -224,6 +224,7 @@ QStringList GUI::getMachineInfo(QString Lab, QString Machine)
         MachineInfo.push_back(query.value(7).toString());
         MachineInfo.push_back(query.value(8).toString());
         MachineInfo.push_back(query.value(9).toString());
+        MachineInfo.push_back(query.value(10).toString());
     }
     return MachineInfo;
 }
@@ -238,6 +239,7 @@ void GUI::setInfo(const QStringList& info)
         ui.label_EstimatLife->setText("");
         ui.label_RoomID->setText("");
         ui.label_StaffInCharge->setText("");
+        ui.label_MT->setText("");
 
         if (ui.graphicsView_Image->scene())
             ui.graphicsView_Image->scene()->clear();
@@ -260,6 +262,7 @@ void GUI::setInfo(const QStringList& info)
         ui.graphicsView_QR->scene()->clear();
     else
         renderQImage(ui.graphicsView_QR, &QImage(info[9]));
+    ui.label_MT->setText(info[10]);
 }
 
 //void GUI::on_toolButton_ChooseImage_pressed()
